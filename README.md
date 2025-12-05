@@ -31,7 +31,7 @@ swift run
 Or build a release version:
 
 ```bash
-./bin/build-release.sh
+./bin/build_release.sh
 ./release/swift-fetch
 ```
 
@@ -65,7 +65,7 @@ swift run
 
 For a release build with optimizations, use the build script:
 ```bash
-./bin/build-release.sh
+./bin/build_release.sh
 ```
 
 This will:
