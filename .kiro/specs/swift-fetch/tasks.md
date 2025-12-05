@@ -6,8 +6,8 @@
   - Add swift-check as a test dependency
   - _Requirements: 5.1, 5.2_
 
-- [ ] 2. Expand SystemInfo data model with all new fields
-  - [ ] 2.1 Update SystemInfo struct to include all 21 fields
+- [x] 2. Expand SystemInfo data model with all new fields
+  - [x] 2.1 Update SystemInfo struct to include all 21 fields
     - Add osBuild, architecture, hostModel fields for OS/hardware details
     - Add kernel, uptime, packages, shell fields for system environment
     - Add resolution, de, wm, wmTheme fields for display configuration
@@ -16,64 +16,64 @@
     - Update isEmpty computed property to check critical fields only
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17_
 
-- [ ] 3. Expand SystemInfoCollector with new retrieval methods
-  - [ ] 3.1 Update getOSInfo() to return build number and architecture
+- [x] 3. Expand SystemInfoCollector with new retrieval methods
+  - [x] 3.1 Update getOSInfo() to return build number and architecture
     - Use ProcessInfo for OS version
     - Use sysctl or uname for build number
     - Use uname for architecture (arm64/x86_64)
     - _Requirements: 1.2_
-  - [ ] 3.2 Implement getHostModel() for hardware model identifier
+  - [x] 3.2 Implement getHostModel() for hardware model identifier
     - Use sysctl hw.model to get Mac model identifier (e.g., Mac15,11)
     - _Requirements: 1.3_
-  - [ ] 3.3 Implement getKernel() for kernel version
+  - [x] 3.3 Implement getKernel() for kernel version
     - Use uname -r or ProcessInfo to get kernel version
     - _Requirements: 1.7_
-  - [ ] 3.4 Implement getUptime() for system uptime
+  - [x] 3.4 Implement getUptime() for system uptime
     - Use sysctl kern.boottime to calculate uptime
     - Format as "X days, Y hours, Z mins"
     - _Requirements: 1.8_
-  - [ ] 3.5 Implement getPackages() for Homebrew package count
+  - [x] 3.5 Implement getPackages() for Homebrew package count
     - Execute "brew list" and count lines
     - Return "N (brew)" format
     - Handle case where Homebrew is not installed
     - _Requirements: 1.9_
-  - [ ] 3.6 Implement getShell() for shell name and version
+  - [x] 3.6 Implement getShell() for shell name and version
     - Use SHELL environment variable for shell path
     - Parse shell name and version from --version output
     - _Requirements: 1.10_
-  - [ ] 3.7 Implement getResolution() for screen resolution
+  - [x] 3.7 Implement getResolution() for screen resolution
     - Use CoreGraphics API to get main display resolution
     - Format as "WIDTHxHEIGHT"
     - _Requirements: 1.11_
-  - [ ] 3.8 Implement getDE() for desktop environment
+  - [x] 3.8 Implement getDE() for desktop environment
     - Return "Aqua" (standard for macOS)
     - _Requirements: 1.12_
-  - [ ] 3.9 Implement getWM() for window manager
+  - [x] 3.9 Implement getWM() for window manager
     - Return "Quartz Compositor" (standard for macOS)
     - _Requirements: 1.13_
-  - [ ] 3.10 Implement getWMTheme() for window manager theme
+  - [x] 3.10 Implement getWMTheme() for window manager theme
     - Read system appearance preference (Light/Dark mode)
     - Use UserDefaults or AppleScript to detect theme
     - Format as "Blue (Light)" or "Blue (Dark)"
     - _Requirements: 1.14_
-  - [ ] 3.11 Implement getTerminal() for terminal application name
+  - [x] 3.11 Implement getTerminal() for terminal application name
     - Use TERM_PROGRAM environment variable
     - Fallback to parsing parent process name
     - _Requirements: 1.15_
-  - [ ] 3.12 Implement getTerminalFont() for terminal font info
+  - [x] 3.12 Implement getTerminalFont() for terminal font info
     - Attempt to read from terminal-specific environment variables
     - Return "Unknown" if not detectable
     - _Requirements: 1.16_
-  - [ ] 3.13 Implement getGPUModel() for GPU information
+  - [x] 3.13 Implement getGPUModel() for GPU information
     - Use system_profiler SPDisplaysDataType or Metal API
     - Parse GPU model name
     - _Requirements: 1.6_
-  - [ ] 3.14 Implement getMemoryInfo() for memory usage
+  - [x] 3.14 Implement getMemoryInfo() for memory usage
     - Use sysctl or vm_stat to get memory statistics
     - Calculate used and total memory in MiB
     - Format as "USED MiB / TOTAL MiB"
     - _Requirements: 1.17_
-  - [ ] 3.15 Update collect() method to gather all new information
+  - [x] 3.15 Update collect() method to gather all new information
     - Call all new retrieval methods
     - Apply fallback values for any failures
     - Return comprehensive SystemInfo struct
@@ -115,8 +115,8 @@
     - Test colorizeArt() applies colors to all lines
     - _Requirements: 3.3, 3.4_
 
-- [ ] 6. Update DisplayRenderer to handle expanded system info
-  - [ ] 6.1 Update render() method to display all new fields
+- [x] 6. Update DisplayRenderer to handle expanded system info
+  - [x] 6.1 Update render() method to display all new fields
     - Format and display all 21 system information fields
     - Organize fields in logical grouping (OS, hardware, display, etc.)
     - Ensure proper alignment with ASCII art
@@ -130,7 +130,7 @@
     - _Requirements: 3.2, 6.3_
 
 - [ ] 7. Update main entry point for expanded functionality
-  - [ ] 7.1 Verify main.swift works with expanded SystemInfo
+  - [x] 7.1 Verify main.swift works with expanded SystemInfo
     - Ensure all new fields are collected and displayed
     - Verify output matches expected format
     - _Requirements: 1.1, 4.4, 5.4_
