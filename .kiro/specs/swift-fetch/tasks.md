@@ -1,34 +1,92 @@
 # Implementation Plan
 
-- [ ] 1. Set up Swift Package Manager project structure
+- [x] 1. Set up Swift Package Manager project structure
   - Create Package.swift manifest with executable target
   - Define project structure with Sources and Tests directories
   - Add swift-check as a test dependency
   - _Requirements: 5.1, 5.2_
 
-- [ ] 2. Implement SystemInfo data model
-  - [ ] 2.1 Create SystemInfo struct with all required fields
-    - Define struct with osName, osVersion, hostname, username, cpuModel properties
-    - Add isEmpty computed property for validation
-    - _Requirements: 1.2, 1.3, 1.4, 1.5_
+- [ ] 2. Expand SystemInfo data model with all new fields
+  - [ ] 2.1 Update SystemInfo struct to include all 21 fields
+    - Add osBuild, architecture, hostModel fields for OS/hardware details
+    - Add kernel, uptime, packages, shell fields for system environment
+    - Add resolution, de, wm, wmTheme fields for display configuration
+    - Add terminal, terminalFont fields for terminal environment
+    - Add gpuModel, memoryUsed, memoryTotal fields for hardware resources
+    - Update isEmpty computed property to check critical fields only
+    - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17_
 
-- [ ] 3. Implement SystemInfoCollector for macOS system information retrieval
-  - [ ] 3.1 Create SystemInfoCollector class with retrieval methods
-    - Implement getOSInfo() using ProcessInfo
-    - Implement getHostname() using ProcessInfo
-    - Implement getUsername() using NSUserName()
-    - Implement getCPUModel() using sysctl or shell commands
-    - Implement collect() to gather all information with fallback handling
-    - _Requirements: 1.2, 1.3, 1.4, 1.5, 4.1, 4.2_
-  - [ ]* 3.2 Write property test for system information completeness
-    - **Property 1: System information completeness**
-    - **Validates: Requirements 1.2, 1.3, 1.4, 1.5, 4.1**
-  - [ ]* 3.3 Write property test for fallback on retrieval errors
+- [ ] 3. Expand SystemInfoCollector with new retrieval methods
+  - [ ] 3.1 Update getOSInfo() to return build number and architecture
+    - Use ProcessInfo for OS version
+    - Use sysctl or uname for build number
+    - Use uname for architecture (arm64/x86_64)
+    - _Requirements: 1.2_
+  - [ ] 3.2 Implement getHostModel() for hardware model identifier
+    - Use sysctl hw.model to get Mac model identifier (e.g., Mac15,11)
+    - _Requirements: 1.3_
+  - [ ] 3.3 Implement getKernel() for kernel version
+    - Use uname -r or ProcessInfo to get kernel version
+    - _Requirements: 1.7_
+  - [ ] 3.4 Implement getUptime() for system uptime
+    - Use sysctl kern.boottime to calculate uptime
+    - Format as "X days, Y hours, Z mins"
+    - _Requirements: 1.8_
+  - [ ] 3.5 Implement getPackages() for Homebrew package count
+    - Execute "brew list" and count lines
+    - Return "N (brew)" format
+    - Handle case where Homebrew is not installed
+    - _Requirements: 1.9_
+  - [ ] 3.6 Implement getShell() for shell name and version
+    - Use SHELL environment variable for shell path
+    - Parse shell name and version from --version output
+    - _Requirements: 1.10_
+  - [ ] 3.7 Implement getResolution() for screen resolution
+    - Use CoreGraphics API to get main display resolution
+    - Format as "WIDTHxHEIGHT"
+    - _Requirements: 1.11_
+  - [ ] 3.8 Implement getDE() for desktop environment
+    - Return "Aqua" (standard for macOS)
+    - _Requirements: 1.12_
+  - [ ] 3.9 Implement getWM() for window manager
+    - Return "Quartz Compositor" (standard for macOS)
+    - _Requirements: 1.13_
+  - [ ] 3.10 Implement getWMTheme() for window manager theme
+    - Read system appearance preference (Light/Dark mode)
+    - Use UserDefaults or AppleScript to detect theme
+    - Format as "Blue (Light)" or "Blue (Dark)"
+    - _Requirements: 1.14_
+  - [ ] 3.11 Implement getTerminal() for terminal application name
+    - Use TERM_PROGRAM environment variable
+    - Fallback to parsing parent process name
+    - _Requirements: 1.15_
+  - [ ] 3.12 Implement getTerminalFont() for terminal font info
+    - Attempt to read from terminal-specific environment variables
+    - Return "Unknown" if not detectable
+    - _Requirements: 1.16_
+  - [ ] 3.13 Implement getGPUModel() for GPU information
+    - Use system_profiler SPDisplaysDataType or Metal API
+    - Parse GPU model name
+    - _Requirements: 1.6_
+  - [ ] 3.14 Implement getMemoryInfo() for memory usage
+    - Use sysctl or vm_stat to get memory statistics
+    - Calculate used and total memory in MiB
+    - Format as "USED MiB / TOTAL MiB"
+    - _Requirements: 1.17_
+  - [ ] 3.15 Update collect() method to gather all new information
+    - Call all new retrieval methods
+    - Apply fallback values for any failures
+    - Return comprehensive SystemInfo struct
+    - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 4.1, 4.2_
+  - [ ]* 3.16 Write property test for comprehensive system information completeness
+    - **Property 1: Comprehensive system information completeness**
+    - **Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 4.1**
+  - [ ]* 3.17 Write property test for fallback on retrieval errors
     - **Property 7: Fallback on retrieval errors**
     - **Validates: Requirements 4.3**
 
-- [ ] 4. Implement ColorFormatter for ANSI color support
-  - [ ] 4.1 Create ANSIColor enum and ColorFormatter class
+- [x] 4. Implement ColorFormatter for ANSI color support
+  - [x] 4.1 Create ANSIColor enum and ColorFormatter class
     - Define ANSIColor enum with standard ANSI escape codes
     - Implement colorize() method to wrap text with color codes
     - Implement formatLabel() and formatValue() with distinct colors
@@ -47,8 +105,8 @@
     - **Property 5: Information formatting consistency**
     - **Validates: Requirements 6.1, 6.2**
 
-- [ ] 5. Implement ASCIIArtProvider for ASCII art rendering
-  - [ ] 5.1 Create ASCIIArtProvider class with art generation
+- [x] 5. Implement ASCIIArtProvider for ASCII art rendering
+  - [x] 5.1 Create ASCIIArtProvider class with art generation
     - Implement getMacOSArt() with default Apple/macOS ASCII art
     - Implement colorizeArt() to apply colors to art lines
     - _Requirements: 3.1, 3.3, 3.4_
@@ -57,30 +115,28 @@
     - Test colorizeArt() applies colors to all lines
     - _Requirements: 3.3, 3.4_
 
-- [ ] 6. Implement DisplayRenderer for combining art and system info
-  - [ ] 6.1 Create DisplayRenderer class with rendering logic
-    - Implement combineArtAndInfo() to merge art and info side-by-side
-    - Implement printToTerminal() to output final result
-    - Implement render() to orchestrate the complete display process
-    - Handle alignment and padding for proper layout
-    - _Requirements: 3.1, 3.2, 6.1, 6.2, 6.3, 6.4_
+- [ ] 6. Update DisplayRenderer to handle expanded system info
+  - [ ] 6.1 Update render() method to display all new fields
+    - Format and display all 21 system information fields
+    - Organize fields in logical grouping (OS, hardware, display, etc.)
+    - Ensure proper alignment with ASCII art
+    - _Requirements: 1.1, 3.1, 3.2, 6.1, 6.2, 6.3, 6.4_
   - [ ]* 6.2 Write property test for art and info alignment
     - **Property 6: Art and info alignment without overlap**
     - **Validates: Requirements 3.2, 6.3**
   - [ ]* 6.3 Write unit tests for display renderer
-    - Test combineArtAndInfo() alignment logic
+    - Test combineArtAndInfo() alignment logic with more info lines
     - Test handling of mismatched line counts
     - _Requirements: 3.2, 6.3_
 
-- [ ] 7. Create main entry point and wire components together
-  - [ ] 7.1 Implement main.swift to orchestrate execution
-    - Instantiate SystemInfoCollector and collect system info
-    - Instantiate ColorFormatter, ASCIIArtProvider, and DisplayRenderer
-    - Call DisplayRenderer.render() with collected system info
+- [ ] 7. Update main entry point for expanded functionality
+  - [ ] 7.1 Verify main.swift works with expanded SystemInfo
+    - Ensure all new fields are collected and displayed
+    - Verify output matches expected format
     - _Requirements: 1.1, 4.4, 5.4_
   - [ ]* 7.2 Write integration test for end-to-end execution
     - Test complete tool execution produces expected output
-    - Verify output contains ASCII art and system information
+    - Verify output contains ASCII art and all system information fields
     - Verify tool completes without errors
     - _Requirements: 1.1, 4.4_
 

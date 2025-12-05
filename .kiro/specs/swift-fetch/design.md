@@ -2,7 +2,7 @@
 
 ## Overview
 
-swift_fetch is a command-line system information display tool for macOS, written in Swift. The tool retrieves system metrics (OS version, hostname, username, CPU model) and displays them in a formatted layout alongside colorized ASCII art. The design emphasizes simplicity, modularity, and native macOS integration using Swift's Foundation framework and system APIs.
+swift_fetch is a comprehensive command-line system information display tool for macOS, written in Swift. The tool retrieves extensive system metrics including OS details, hardware information, display configuration, shell environment, package counts, and memory usage. All information is displayed in a formatted layout alongside colorized ASCII art, similar to neofetch. The design emphasizes modularity, native macOS integration using Swift's Foundation framework, system APIs, and shell command execution where necessary.
 
 ## Architecture
 
@@ -23,9 +23,11 @@ The architecture is designed for a proof-of-concept with clear separation betwee
     ┌────▼─────────────────────┐
     │  SystemInfoCollector     │
     │  - Retrieves OS info     │
-    │  - Retrieves hostname    │
-    │  - Retrieves username    │
-    │  - Retrieves CPU info    │
+    │  - Retrieves hardware    │
+    │  - Retrieves display     │
+    │  - Retrieves environment │
+    │  - Retrieves packages    │
+    │  - Retrieves memory      │
     └────────┬─────────────────┘
              │
     ┌────────▼─────────────────┐
@@ -47,30 +49,66 @@ The architecture is designed for a proof-of-concept with clear separation betwee
 
 ### SystemInfoCollector
 
-Responsible for retrieving system information from macOS.
+Responsible for retrieving comprehensive system information from macOS.
 
 ```swift
 struct SystemInfo {
     let osName: String
     let osVersion: String
+    let osBuild: String
+    let architecture: String
+    let hostModel: String
     let hostname: String
     let username: String
+    let kernel: String
+    let uptime: String
+    let packages: String
+    let shell: String
+    let resolution: String
+    let de: String
+    let wm: String
+    let wmTheme: String
+    let terminal: String
+    let terminalFont: String
     let cpuModel: String
+    let gpuModel: String
+    let memoryUsed: String
+    let memoryTotal: String
 }
 
 class SystemInfoCollector {
     func collect() -> SystemInfo
-    func getOSInfo() -> (name: String, version: String)
+    func getOSInfo() -> (name: String, version: String, build: String, architecture: String)
+    func getHostModel() -> String
     func getHostname() -> String
     func getUsername() -> String
+    func getKernel() -> String
+    func getUptime() -> String
+    func getPackages() -> String
+    func getShell() -> String
+    func getResolution() -> String
+    func getDE() -> String
+    func getWM() -> String
+    func getWMTheme() -> String
+    func getTerminal() -> String
+    func getTerminalFont() -> String
     func getCPUModel() -> String
+    func getGPUModel() -> String
+    func getMemoryInfo() -> (used: String, total: String)
 }
 ```
 
 **Implementation approach:**
-- Use `ProcessInfo` for OS version and hostname
+- Use `ProcessInfo` for OS version, hostname, and basic system info
 - Use `NSUserName()` for username
-- Use `sysctl` or shell commands for CPU information
+- Use `sysctl` for hardware information (CPU, GPU, memory, kernel, host model)
+- Use `uname` for kernel version and architecture
+- Use shell commands for uptime calculation
+- Use `brew list` for package counting
+- Use environment variables for shell, terminal, and terminal font detection
+- Use system APIs or shell commands for display resolution
+- Use hardcoded values for DE (Aqua) and WM (Quartz Compositor) as these are standard on macOS
+- Parse system preferences for WM theme
 - Return fallback values (e.g., "Unknown") when data is unavailable
 
 ### ColorFormatter
@@ -146,28 +184,44 @@ class DisplayRenderer {
 struct SystemInfo {
     let osName: String
     let osVersion: String
+    let osBuild: String
+    let architecture: String
+    let hostModel: String
     let hostname: String
     let username: String
+    let kernel: String
+    let uptime: String
+    let packages: String
+    let shell: String
+    let resolution: String
+    let de: String
+    let wm: String
+    let wmTheme: String
+    let terminal: String
+    let terminalFont: String
     let cpuModel: String
+    let gpuModel: String
+    let memoryUsed: String
+    let memoryTotal: String
     
     var isEmpty: Bool {
+        // Check if all critical fields are empty
         return osName.isEmpty && osVersion.isEmpty && 
-               hostname.isEmpty && username.isEmpty && 
-               cpuModel.isEmpty
+               hostname.isEmpty && username.isEmpty
     }
 }
 ```
 
-This is the primary data structure holding all retrieved system metrics.
+This is the primary data structure holding all retrieved system metrics. The struct contains 21 fields covering operating system details, hardware specifications, display configuration, environment settings, and resource usage.
 
 
 ## Correctness Properties
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
-### Property 1: System information completeness
-*For any* execution of the system info collector on macOS, all required fields (OS name, OS version, hostname, username, CPU model) should be populated with non-empty values or appropriate fallback values.
-**Validates: Requirements 1.2, 1.3, 1.4, 1.5, 4.1**
+### Property 1: Comprehensive system information completeness
+*For any* execution of the system info collector on macOS, all required fields (OS name, OS version, OS build, architecture, host model, hostname, username, kernel, uptime, packages, shell, resolution, DE, WM, WM theme, terminal, terminal font, CPU model, GPU model, memory used, memory total) should be populated with non-empty values or appropriate fallback values.
+**Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 4.1**
 
 ### Property 2: Color code application
 *For any* text string that is colorized, the output should contain valid ANSI escape sequences that match the standard format `\u{001B}[<code>m`.
@@ -287,10 +341,12 @@ For this POC, performance is not a primary concern. The tool should:
 - Minimize system calls by collecting all info once
 - Use simple string operations for formatting
 
-### Future Enhancements (Out of Scope for POC)
+### Future Enhancements (Out of Scope)
 
-- Support for additional system metrics (memory, disk, uptime)
+- Support for disk usage information
 - Customizable color schemes
 - Multiple ASCII art options
 - Configuration file support
 - Linux/Windows compatibility
+- Battery status for laptops
+- Network information

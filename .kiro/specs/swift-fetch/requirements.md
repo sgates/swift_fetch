@@ -6,25 +6,42 @@ swift_fetch is a terminal-based command-line system information display tool wri
 
 ## Glossary
 
-- **System Information Tool**: The Swift-neofetch application that displays system details
+- **System Information Tool**: The swift_fetch application that displays system details
 - **Terminal Interface**: The command-line interface where the tool executes and displays output
 - **ASCII Art**: Text-based visual art displayed alongside system information
 - **ANSI Color Codes**: Terminal escape sequences used to colorize output
 - **System Metrics**: Hardware and software information retrieved from the macOS system
+- **Homebrew**: A package manager for macOS used to install software packages
+- **Desktop Environment**: The graphical environment that provides the user interface (Aqua on macOS)
+- **Window Manager**: The system component that controls window placement and appearance (Quartz Compositor on macOS)
+- **Kernel**: The core component of the operating system that manages system resources
+- **Architecture**: The processor architecture (e.g., arm64 for Apple Silicon, x86_64 for Intel)
 
 ## Requirements
 
 ### Requirement 1
 
-**User Story:** As a user, I want to run a command-line tool that displays my system information, so that I can quickly view key details about my macOS system.
+**User Story:** As a user, I want to run a command-line tool that displays my system information, so that I can quickly view comprehensive details about my macOS system.
 
 #### Acceptance Criteria
 
 1. WHEN a user executes the System Information Tool from the terminal THEN the System Information Tool SHALL display system information in a formatted output
-2. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve the operating system name and version
+2. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve the operating system name, version, build number, and architecture
 3. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve the hostname of the system
 4. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve the current username
 5. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve CPU model information
+6. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve GPU model information
+7. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve kernel version information
+8. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve system uptime information
+9. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve the count of installed packages from Homebrew
+10. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve the current shell name and version
+11. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve screen resolution information
+12. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve desktop environment information
+13. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve window manager information
+14. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve window manager theme information
+15. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve terminal application name
+16. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve terminal font name and size
+17. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve memory usage information including used and total memory
 
 ### Requirement 2
 
