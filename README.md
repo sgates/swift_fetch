@@ -28,11 +28,11 @@ Run the tool from your terminal:
 swift run
 ```
 
-Or build and run the executable:
+Or build a release version:
 
 ```bash
-swift build -c release
-.build/release/swift_fetch
+./bin/build-release.sh
+./release/swift-fetch
 ```
 
 The tool will display your system information in a formatted layout with ASCII art.
@@ -63,10 +63,24 @@ swift build
 swift run
 ```
 
-For a release build with optimizations:
+For a release build with optimizations, use the build script:
+```bash
+./bin/build-release.sh
+```
+
+This will:
+- Build the optimized release binary in `.build/release/`
+- Copy the executable to `release/swift-fetch`
+
+Then run it:
+```bash
+./release/swift-fetch
+```
+
+Or manually build without the script:
 ```bash
 swift build -c release
-.build/release/swift_fetch
+.build/release/swift-fetch
 ```
 
 ## Collected System Information
