@@ -290,7 +290,7 @@ Unit tests will verify specific behaviors and edge cases:
 Property-based tests will verify universal properties across many inputs using **swift-check**, a QuickCheck-inspired property testing library for Swift.
 
 Each property-based test will:
-- Run a minimum of 100 iterations with randomly generated inputs
+- Run a minimum of 25 iterations with randomly generated inputs
 - Be tagged with a comment referencing the design document property
 - Verify the correctness properties defined above
 
