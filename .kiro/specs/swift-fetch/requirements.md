@@ -16,6 +16,11 @@ swift_fetch is a terminal-based command-line system information display tool wri
 - **Window Manager**: The system component that controls window placement and appearance (Quartz Compositor on macOS)
 - **Kernel**: The core component of the operating system that manages system resources
 - **Architecture**: The processor architecture (e.g., arm64 for Apple Silicon, x86_64 for Intel)
+- **CPU Cores**: The number of physical and logical processing cores available in the system
+- **Load Average**: A measure of system load representing the average number of processes in the run queue over time intervals
+- **Disk Space**: The amount of storage capacity used and available on the system's primary disk
+- **Disk Encryption**: The security status indicating whether the system disk is encrypted (e.g., FileVault on macOS)
+- **Battery Charge**: The current battery charge level as a percentage for portable Mac systems
 
 ## Requirements
 
@@ -42,6 +47,11 @@ swift_fetch is a terminal-based command-line system information display tool wri
 15. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve terminal application name
 16. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve terminal font name and size
 17. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve memory usage information including used and total memory
+18. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve the number of CPU cores
+19. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve system load average for the last 1, 5, 15, and 60 minutes
+20. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve used and free disk space
+21. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve disk encryption status
+22. WHEN the System Information Tool runs THEN the System Information Tool SHALL retrieve battery charge percentage
 
 ### Requirement 2
 

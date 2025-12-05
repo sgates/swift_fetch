@@ -7,14 +7,19 @@
   - _Requirements: 5.1, 5.2_
 
 - [x] 2. Expand SystemInfo data model with all new fields
-  - [x] 2.1 Update SystemInfo struct to include all 21 fields
+  - [x] 2.1 Update SystemInfo struct to include all 30 fields
     - Add osBuild, architecture, hostModel fields for OS/hardware details
     - Add kernel, uptime, packages, shell fields for system environment
     - Add resolution, de, wm, wmTheme fields for display configuration
     - Add terminal, terminalFont fields for terminal environment
+    - Add cpuCores field for CPU core count
     - Add gpuModel, memoryUsed, memoryTotal fields for hardware resources
+    - Add loadAverage1, loadAverage5, loadAverage15, loadAverage60 fields for system load
+    - Add diskUsed, diskFree fields for disk space information
+    - Add diskEncryption field for FileVault status
+    - Add batteryCharge field for battery percentage
     - Update isEmpty computed property to check critical fields only
-    - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17_
+    - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.20, 1.21, 1.22_
 
 - [x] 3. Expand SystemInfoCollector with new retrieval methods
   - [x] 3.1 Update getOSInfo() to return build number and architecture
@@ -73,15 +78,39 @@
     - Calculate used and total memory in MiB
     - Format as "USED MiB / TOTAL MiB"
     - _Requirements: 1.17_
-  - [x] 3.15 Update collect() method to gather all new information
-    - Call all new retrieval methods
+  - [x] 3.15 Implement getCPUCores() for CPU core count
+    - Use sysctl hw.ncpu or hw.physicalcpu to get core count
+    - Format as "N cores" or "N physical / M logical"
+    - _Requirements: 1.18_
+  - [x] 3.16 Implement getLoadAverages() for system load
+    - Use sysctl vm.loadavg to get 1, 5, 15 minute load averages
+    - For 60-minute average, mark as "N/A" (not available from standard macOS APIs)
+    - Format each as decimal number (e.g., "2.45")
+    - _Requirements: 1.19_
+  - [x] 3.17 Implement getDiskSpace() for disk usage
+    - Use df command or FileManager.attributesOfFileSystem to get disk space
+    - Calculate used and free space for root volume
+    - Format as "USED GiB / FREE GiB"
+    - _Requirements: 1.20_
+  - [x] 3.18 Implement getDiskEncryption() for FileVault status
+    - Use fdesetup status command to check encryption status
+    - Return "Enabled" or "Disabled"
+    - Handle case where fdesetup requires elevated privileges
+    - _Requirements: 1.21_
+  - [x] 3.19 Implement getBatteryCharge() for battery percentage
+    - Use pmset -g batt command or IOKit APIs to get battery level
+    - Return percentage as "N%" or "N/A" for desktop Macs
+    - Handle case where battery information is unavailable
+    - _Requirements: 1.22_
+  - [x] 3.20 Update collect() method to gather all new information
+    - Call all new retrieval methods (getCPUCores, getLoadAverages, getDiskSpace, getDiskEncryption, getBatteryCharge)
     - Apply fallback values for any failures
-    - Return comprehensive SystemInfo struct
-    - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 4.1, 4.2_
-  - [x] 3.16 Write property test for comprehensive system information completeness
+    - Return comprehensive SystemInfo struct with all 30 fields
+    - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.20, 1.21, 1.22, 4.1, 4.2_
+  - [x] 3.21 Write property test for comprehensive system information completeness
     - **Property 1: Comprehensive system information completeness**
-    - **Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 4.1**
-  - [x] 3.17 Write property test for fallback on retrieval errors
+    - **Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.20, 1.21, 1.22, 4.1**
+  - [x] 3.22 Write property test for fallback on retrieval errors
     - **Property 7: Fallback on retrieval errors**
     - **Validates: Requirements 4.3**
 
@@ -117,10 +146,15 @@
 
 - [x] 6. Update DisplayRenderer to handle expanded system info
   - [x] 6.1 Update render() method to display all new fields
-    - Format and display all 21 system information fields
-    - Organize fields in logical grouping (OS, hardware, display, etc.)
+    - Format and display all 30 system information fields
+    - Add CPU cores display after CPU model
+    - Add load average display (1, 5, 15, 60 min) in system metrics section
+    - Add disk space display (used/free) in storage section
+    - Add disk encryption status display
+    - Add battery charge display in power section
+    - Organize fields in logical grouping (OS, hardware, display, system load, storage, power, etc.)
     - Ensure proper alignment with ASCII art
-    - _Requirements: 1.1, 3.1, 3.2, 6.1, 6.2, 6.3, 6.4_
+    - _Requirements: 1.1, 1.18, 1.19, 1.20, 1.21, 1.22, 3.1, 3.2, 6.1, 6.2, 6.3, 6.4_
   - [x] 6.2 Write property test for art and info alignment
     - **Property 6: Art and info alignment without overlap**
     - **Validates: Requirements 3.2, 6.3**
@@ -131,14 +165,14 @@
 
 - [x] 7. Update main entry point for expanded functionality
   - [x] 7.1 Verify main.swift works with expanded SystemInfo
-    - Ensure all new fields are collected and displayed
+    - Ensure all new fields (CPU cores, load averages, disk space, disk encryption, battery) are collected and displayed
     - Verify output matches expected format
-    - _Requirements: 1.1, 4.4, 5.4_
+    - _Requirements: 1.1, 1.18, 1.19, 1.20, 1.21, 1.22, 4.4, 5.4_
   - [x] 7.2 Write integration test for end-to-end execution
     - Test complete tool execution produces expected output
-    - Verify output contains ASCII art and all system information fields
+    - Verify output contains ASCII art and all 30 system information fields
     - Verify tool completes without errors
-    - _Requirements: 1.1, 4.4_
+    - _Requirements: 1.1, 1.18, 1.19, 1.20, 1.21, 1.22, 4.4_
 
 - [x] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.

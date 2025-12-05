@@ -32,9 +32,23 @@ struct SystemInfo {
     
     // Hardware resources
     let cpuModel: String
+    let cpuCores: String
     let gpuModel: String
     let memoryUsed: String
     let memoryTotal: String
+    
+    // System load
+    let loadAverage1: String
+    let loadAverage5: String
+    let loadAverage15: String
+    
+    // Disk information
+    let diskUsed: String
+    let diskFree: String
+    let diskEncryption: String
+    
+    // Battery information
+    let batteryCharge: String
     
     /// Checks if critical system information fields are empty
     var isEmpty: Bool {
@@ -468,6 +482,164 @@ class SystemInfoCollector {
         }
     }
     
+    /// Retrieves CPU core count information
+    /// - Returns: The CPU core count formatted as "N cores" or "N physical / M logical"
+    func getCPUCores() -> String {
+        var physicalCores: Int32 = 0
+        var logicalCores: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        
+        // Get physical CPU count
+        let physicalResult = sysctlbyname("hw.physicalcpu", &physicalCores, &size, nil, 0)
+        
+        // Get logical CPU count (includes hyperthreading)
+        let logicalResult = sysctlbyname("hw.ncpu", &logicalCores, &size, nil, 0)
+        
+        // Check if both calls succeeded
+        guard physicalResult == 0 && logicalResult == 0 else {
+            return "Unknown"
+        }
+        
+        // If physical and logical are the same, just show core count
+        if physicalCores == logicalCores {
+            return "\(physicalCores) core\(physicalCores == 1 ? "" : "s")"
+        } else {
+            // Show both physical and logical
+            return "\(physicalCores) physical / \(logicalCores) logical"
+        }
+    }
+    
+    /// Retrieves system load averages
+    /// - Returns: A tuple containing 1, 5, and 15 minute load averages formatted as decimal numbers
+    func getLoadAverages() -> (one: String, five: String, fifteen: String) {
+        var loadavg = [Double](repeating: 0.0, count: 3)
+        
+        // Get load averages using getloadavg() system call
+        let result = getloadavg(&loadavg, 3)
+        
+        guard result == 3 else {
+            return (one: "Unknown", five: "Unknown", fifteen: "Unknown")
+        }
+        
+        // Format load averages to 2 decimal places
+        let oneMin = String(format: "%.2f", loadavg[0])
+        let fiveMin = String(format: "%.2f", loadavg[1])
+        let fifteenMin = String(format: "%.2f", loadavg[2])
+        
+        return (one: oneMin, five: fiveMin, fifteen: fifteenMin)
+    }
+    
+    /// Retrieves disk space information for the root volume
+    /// - Returns: A tuple containing used and free disk space in GiB
+    func getDiskSpace() -> (used: String, free: String) {
+        do {
+            // Get file system attributes for the root volume
+            let fileManager = FileManager.default
+            let attributes = try fileManager.attributesOfFileSystem(forPath: "/")
+            
+            // Extract total and free space
+            guard let totalSpace = attributes[.systemSize] as? NSNumber,
+                  let freeSpace = attributes[.systemFreeSize] as? NSNumber else {
+                return (used: "Unknown", free: "Unknown")
+            }
+            
+            // Convert bytes to GiB (1 GiB = 1024^3 bytes)
+            let totalGiB = totalSpace.doubleValue / (1024.0 * 1024.0 * 1024.0)
+            let freeGiB = freeSpace.doubleValue / (1024.0 * 1024.0 * 1024.0)
+            let usedGiB = totalGiB - freeGiB
+            
+            // Format to 2 decimal places
+            let usedFormatted = String(format: "%.2f", usedGiB)
+            let freeFormatted = String(format: "%.2f", freeGiB)
+            
+            return (used: usedFormatted, free: freeFormatted)
+        } catch {
+            return (used: "Unknown", free: "Unknown")
+        }
+    }
+    
+    /// Retrieves disk encryption status (FileVault)
+    /// - Returns: "Enabled" if FileVault is on, "Disabled" if off, or "Unknown" if status cannot be determined
+    func getDiskEncryption() -> String {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/fdesetup")
+        process.arguments = ["status"]
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let output = String(data: data, encoding: .utf8) {
+                let status = output.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                
+                // Check for "FileVault is On" or similar messages
+                if status.contains("filevault is on") || status.contains("encryption in progress") {
+                    return "Enabled"
+                } else if status.contains("filevault is off") {
+                    return "Disabled"
+                }
+            }
+            
+            // If the command failed (e.g., requires elevated privileges), return Unknown
+            if process.terminationStatus != 0 {
+                return "Unknown"
+            }
+        } catch {
+            // Handle case where fdesetup command fails to execute
+            return "Unknown"
+        }
+        
+        return "Unknown"
+    }
+    
+    /// Retrieves battery charge percentage
+    /// - Returns: The battery charge as "N%" or "N/A" for desktop Macs or when battery information is unavailable
+    func getBatteryCharge() -> String {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
+        process.arguments = ["-g", "batt"]
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let output = String(data: data, encoding: .utf8) {
+                // Parse output for battery percentage
+                // Example output: "Now drawing from 'Battery Power'\n -InternalBattery-0 (id=12345678)\t85%; discharging; 3:45 remaining present: true"
+                let lines = output.components(separatedBy: .newlines)
+                
+                for line in lines {
+                    // Look for lines containing battery information (typically contains "InternalBattery")
+                    if line.contains("InternalBattery") || line.contains("Battery") {
+                        // Try to extract percentage using regex pattern
+                        if let percentageRange = line.range(of: #"\d+%"#, options: .regularExpression) {
+                            let percentage = String(line[percentageRange])
+                            return percentage
+                        }
+                    }
+                }
+                
+                // If no battery information found, it's likely a desktop Mac
+                return "N/A"
+            }
+        } catch {
+            // Handle case where pmset command fails to execute
+            return "N/A"
+        }
+        
+        return "N/A"
+    }
+    
     /// Collects all system information with fallback handling
     /// - Returns: A SystemInfo struct containing all collected information
     func collect() -> SystemInfo {
@@ -486,8 +658,13 @@ class SystemInfoCollector {
         let terminal = getTerminal()
         let terminalFont = getTerminalFont()
         let cpuModel = getCPUModel()
+        let cpuCores = getCPUCores()
         let gpuModel = getGPUModel()
         let memoryInfo = getMemoryInfo()
+        let loadAverages = getLoadAverages()
+        let diskSpace = getDiskSpace()
+        let diskEncryption = getDiskEncryption()
+        let batteryCharge = getBatteryCharge()
         
         // Apply fallback values if any field is empty
         return SystemInfo(
@@ -509,9 +686,17 @@ class SystemInfoCollector {
             terminal: terminal.isEmpty ? "Unknown" : terminal,
             terminalFont: terminalFont.isEmpty ? "Unknown" : terminalFont,
             cpuModel: cpuModel.isEmpty ? "Unknown" : cpuModel,
+            cpuCores: cpuCores.isEmpty ? "Unknown" : cpuCores,
             gpuModel: gpuModel.isEmpty ? "Unknown" : gpuModel,
             memoryUsed: memoryInfo.used.isEmpty ? "Unknown" : memoryInfo.used,
-            memoryTotal: memoryInfo.total.isEmpty ? "Unknown" : memoryInfo.total
+            memoryTotal: memoryInfo.total.isEmpty ? "Unknown" : memoryInfo.total,
+            loadAverage1: loadAverages.one.isEmpty ? "Unknown" : loadAverages.one,
+            loadAverage5: loadAverages.five.isEmpty ? "Unknown" : loadAverages.five,
+            loadAverage15: loadAverages.fifteen.isEmpty ? "Unknown" : loadAverages.fifteen,
+            diskUsed: diskSpace.used.isEmpty ? "Unknown" : diskSpace.used,
+            diskFree: diskSpace.free.isEmpty ? "Unknown" : diskSpace.free,
+            diskEncryption: diskEncryption.isEmpty ? "Unknown" : diskEncryption,
+            batteryCharge: batteryCharge.isEmpty ? "N/A" : batteryCharge
         )
     }
 }
@@ -764,8 +949,20 @@ class DisplayRenderer {
         
         // Hardware Resources
         infoLines.append(colorFormatter.formatInfoLine("CPU", systemInfo.cpuModel))
+        infoLines.append(colorFormatter.formatInfoLine("CPU Cores", systemInfo.cpuCores))
         infoLines.append(colorFormatter.formatInfoLine("GPU", systemInfo.gpuModel))
         infoLines.append(colorFormatter.formatInfoLine("Memory", "\(systemInfo.memoryUsed) MiB / \(systemInfo.memoryTotal) MiB"))
+        
+        // System Load
+        let loadAverageValue = "\(systemInfo.loadAverage1), \(systemInfo.loadAverage5), \(systemInfo.loadAverage15)"
+        infoLines.append(colorFormatter.formatInfoLine("Load Average", loadAverageValue))
+        
+        // Storage
+        infoLines.append(colorFormatter.formatInfoLine("Disk Space", "\(systemInfo.diskUsed) GiB / \(systemInfo.diskFree) GiB"))
+        infoLines.append(colorFormatter.formatInfoLine("Disk Encryption", systemInfo.diskEncryption))
+        
+        // Power
+        infoLines.append(colorFormatter.formatInfoLine("Battery", systemInfo.batteryCharge))
         
         // Combine art and info
         let combined = combineArtAndInfo(art: colorizedArt, info: infoLines)

@@ -11,12 +11,13 @@ final class SwiftFetchTests: XCTestCase {
     }
     
     /// **Feature: swift-fetch, Property 1: Comprehensive system information completeness**
-    /// **Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 4.1**
+    /// **Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.20, 1.21, 1.22, 4.1**
     ///
     /// Property: For any execution of the system info collector on macOS, all required fields
     /// (OS name, OS version, OS build, architecture, host model, hostname, username, kernel,
     /// uptime, packages, shell, resolution, DE, WM, WM theme, terminal, terminal font, CPU model,
-    /// GPU model, memory used, memory total) should be populated with non-empty values or
+    /// CPU cores, GPU model, memory used, memory total, load averages, disk used, disk free,
+    /// disk encryption, battery charge) should be populated with non-empty values or
     /// appropriate fallback values.
     func testComprehensiveSystemInformationCompleteness() {
         // Property-based test: Run 25 iterations to verify system info collection
@@ -28,7 +29,7 @@ final class SwiftFetchTests: XCTestCase {
             let collector = SystemInfoCollector()
             let systemInfo = collector.collect()
             
-            // Verify all fields are non-empty (either real data or fallback values like "Unknown")
+            // Verify all fields are non-empty (either real data or fallback values like "Unknown" or "N/A")
             let allFieldsNonEmpty = 
                 !systemInfo.osName.isEmpty &&
                 !systemInfo.osVersion.isEmpty &&
@@ -48,9 +49,17 @@ final class SwiftFetchTests: XCTestCase {
                 !systemInfo.terminal.isEmpty &&
                 !systemInfo.terminalFont.isEmpty &&
                 !systemInfo.cpuModel.isEmpty &&
+                !systemInfo.cpuCores.isEmpty &&
                 !systemInfo.gpuModel.isEmpty &&
                 !systemInfo.memoryUsed.isEmpty &&
-                !systemInfo.memoryTotal.isEmpty
+                !systemInfo.memoryTotal.isEmpty &&
+                !systemInfo.loadAverage1.isEmpty &&
+                !systemInfo.loadAverage5.isEmpty &&
+                !systemInfo.loadAverage15.isEmpty &&
+                !systemInfo.diskUsed.isEmpty &&
+                !systemInfo.diskFree.isEmpty &&
+                !systemInfo.diskEncryption.isEmpty &&
+                !systemInfo.batteryCharge.isEmpty
             
             return allFieldsNonEmpty
         }
@@ -184,9 +193,17 @@ final class SwiftFetchTests: XCTestCase {
                 !systemInfo.terminal.isEmpty &&
                 !systemInfo.terminalFont.isEmpty &&
                 !systemInfo.cpuModel.isEmpty &&
+                !systemInfo.cpuCores.isEmpty &&
                 !systemInfo.gpuModel.isEmpty &&
                 !systemInfo.memoryUsed.isEmpty &&
-                !systemInfo.memoryTotal.isEmpty
+                !systemInfo.memoryTotal.isEmpty &&
+                !systemInfo.loadAverage1.isEmpty &&
+                !systemInfo.loadAverage5.isEmpty &&
+                !systemInfo.loadAverage15.isEmpty &&
+                !systemInfo.diskUsed.isEmpty &&
+                !systemInfo.diskFree.isEmpty &&
+                !systemInfo.diskEncryption.isEmpty &&
+                !systemInfo.batteryCharge.isEmpty
             
             return allFieldsHaveFallbacks
         }
@@ -643,8 +660,20 @@ final class SwiftFetchTests: XCTestCase {
         
         // Hardware Resources
         infoLines.append(colorFormatter.formatInfoLine("CPU", systemInfo.cpuModel))
+        infoLines.append(colorFormatter.formatInfoLine("CPU Cores", systemInfo.cpuCores))
         infoLines.append(colorFormatter.formatInfoLine("GPU", systemInfo.gpuModel))
         infoLines.append(colorFormatter.formatInfoLine("Memory", "\(systemInfo.memoryUsed) MiB / \(systemInfo.memoryTotal) MiB"))
+        
+        // System Load
+        let loadAverageValue = "\(systemInfo.loadAverage1), \(systemInfo.loadAverage5), \(systemInfo.loadAverage15)"
+        infoLines.append(colorFormatter.formatInfoLine("Load Average", loadAverageValue))
+        
+        // Storage
+        infoLines.append(colorFormatter.formatInfoLine("Disk Space", "\(systemInfo.diskUsed) GiB / \(systemInfo.diskFree) GiB"))
+        infoLines.append(colorFormatter.formatInfoLine("Disk Encryption", systemInfo.diskEncryption))
+        
+        // Power
+        infoLines.append(colorFormatter.formatInfoLine("Battery", systemInfo.batteryCharge))
         
         // Verify all info lines are formatted with colors
         for line in infoLines {
@@ -689,8 +718,13 @@ final class SwiftFetchTests: XCTestCase {
         XCTAssertTrue(combinedStripped.contains("WM:"), "Output should contain WM label")
         XCTAssertTrue(combinedStripped.contains("Terminal:"), "Output should contain Terminal label")
         XCTAssertTrue(combinedStripped.contains("CPU:"), "Output should contain CPU label")
+        XCTAssertTrue(combinedStripped.contains("CPU Cores:"), "Output should contain CPU Cores label")
         XCTAssertTrue(combinedStripped.contains("GPU:"), "Output should contain GPU label")
         XCTAssertTrue(combinedStripped.contains("Memory:"), "Output should contain Memory label")
+        XCTAssertTrue(combinedStripped.contains("Load Average:"), "Output should contain Load Average label")
+        XCTAssertTrue(combinedStripped.contains("Disk Space:"), "Output should contain Disk Space label")
+        XCTAssertTrue(combinedStripped.contains("Disk Encryption:"), "Output should contain Disk Encryption label")
+        XCTAssertTrue(combinedStripped.contains("Battery:"), "Output should contain Battery label")
         
         // Check for presence of ASCII art content (check for some characteristic art characters)
         XCTAssertTrue(combinedStripped.contains("'c."), "Output should contain ASCII art content")
@@ -920,11 +954,31 @@ class FailingSystemInfoCollector: SystemInfoCollector {
         return ""
     }
     
+    override func getCPUCores() -> String {
+        return ""
+    }
+    
     override func getGPUModel() -> String {
         return ""
     }
     
     override func getMemoryInfo() -> (used: String, total: String) {
         return (used: "", total: "")
+    }
+    
+    override func getLoadAverages() -> (one: String, five: String, fifteen: String) {
+        return (one: "", five: "", fifteen: "")
+    }
+    
+    override func getDiskSpace() -> (used: String, free: String) {
+        return (used: "", free: "")
+    }
+    
+    override func getDiskEncryption() -> String {
+        return ""
+    }
+    
+    override func getBatteryCharge() -> String {
+        return ""
     }
 }

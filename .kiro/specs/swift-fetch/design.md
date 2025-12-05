@@ -71,9 +71,18 @@ struct SystemInfo {
     let terminal: String
     let terminalFont: String
     let cpuModel: String
+    let cpuCores: String
     let gpuModel: String
     let memoryUsed: String
     let memoryTotal: String
+    let loadAverage1: String
+    let loadAverage5: String
+    let loadAverage15: String
+    let loadAverage60: String
+    let diskUsed: String
+    let diskFree: String
+    let diskEncryption: String
+    let batteryCharge: String
 }
 
 class SystemInfoCollector {
@@ -93,15 +102,20 @@ class SystemInfoCollector {
     func getTerminal() -> String
     func getTerminalFont() -> String
     func getCPUModel() -> String
+    func getCPUCores() -> String
     func getGPUModel() -> String
     func getMemoryInfo() -> (used: String, total: String)
+    func getLoadAverages() -> (one: String, five: String, fifteen: String, sixty: String)
+    func getDiskSpace() -> (used: String, free: String)
+    func getDiskEncryption() -> String
+    func getBatteryCharge() -> String
 }
 ```
 
 **Implementation approach:**
 - Use `ProcessInfo` for OS version, hostname, and basic system info
 - Use `NSUserName()` for username
-- Use `sysctl` for hardware information (CPU, GPU, memory, kernel, host model)
+- Use `sysctl` for hardware information (CPU, GPU, memory, kernel, host model, CPU cores)
 - Use `uname` for kernel version and architecture
 - Use shell commands for uptime calculation
 - Use `brew list` for package counting
@@ -109,7 +123,11 @@ class SystemInfoCollector {
 - Use system APIs or shell commands for display resolution
 - Use hardcoded values for DE (Aqua) and WM (Quartz Compositor) as these are standard on macOS
 - Parse system preferences for WM theme
-- Return fallback values (e.g., "Unknown") when data is unavailable
+- Use `sysctl vm.loadavg` for load averages (1, 5, 15 min); calculate 60-min average from available data or mark as unavailable
+- Use `df` command or FileManager API to get disk space information
+- Use `fdesetup status` or `diskutil apfs list` to check FileVault encryption status
+- Use `pmset -g batt` or IOKit APIs to get battery charge percentage (return "N/A" for desktop Macs)
+- Return fallback values (e.g., "Unknown", "N/A") when data is unavailable
 
 ### ColorFormatter
 
@@ -200,9 +218,18 @@ struct SystemInfo {
     let terminal: String
     let terminalFont: String
     let cpuModel: String
+    let cpuCores: String
     let gpuModel: String
     let memoryUsed: String
     let memoryTotal: String
+    let loadAverage1: String
+    let loadAverage5: String
+    let loadAverage15: String
+    let loadAverage60: String
+    let diskUsed: String
+    let diskFree: String
+    let diskEncryption: String
+    let batteryCharge: String
     
     var isEmpty: Bool {
         // Check if all critical fields are empty
@@ -212,7 +239,7 @@ struct SystemInfo {
 }
 ```
 
-This is the primary data structure holding all retrieved system metrics. The struct contains 21 fields covering operating system details, hardware specifications, display configuration, environment settings, and resource usage.
+This is the primary data structure holding all retrieved system metrics. The struct contains 30 fields covering operating system details, hardware specifications, display configuration, environment settings, resource usage, system load, disk information, and battery status.
 
 
 ## Correctness Properties
@@ -220,8 +247,8 @@ This is the primary data structure holding all retrieved system metrics. The str
 *A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
 ### Property 1: Comprehensive system information completeness
-*For any* execution of the system info collector on macOS, all required fields (OS name, OS version, OS build, architecture, host model, hostname, username, kernel, uptime, packages, shell, resolution, DE, WM, WM theme, terminal, terminal font, CPU model, GPU model, memory used, memory total) should be populated with non-empty values or appropriate fallback values.
-**Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 4.1**
+*For any* execution of the system info collector on macOS, all required fields (OS name, OS version, OS build, architecture, host model, hostname, username, kernel, uptime, packages, shell, resolution, DE, WM, WM theme, terminal, terminal font, CPU model, CPU cores, GPU model, memory used, memory total, load averages, disk used, disk free, disk encryption, battery charge) should be populated with non-empty values or appropriate fallback values.
+**Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.20, 1.21, 1.22, 4.1**
 
 ### Property 2: Color code application
 *For any* text string that is colorized, the output should contain valid ANSI escape sequences that match the standard format `\u{001B}[<code>m`.
@@ -343,10 +370,10 @@ For this POC, performance is not a primary concern. The tool should:
 
 ### Future Enhancements (Out of Scope)
 
-- Support for disk usage information
 - Customizable color schemes
 - Multiple ASCII art options
 - Configuration file support
 - Linux/Windows compatibility
-- Battery status for laptops
 - Network information
+- Temperature sensors
+- Fan speeds
