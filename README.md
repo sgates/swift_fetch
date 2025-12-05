@@ -16,7 +16,7 @@ A fast, colorful command-line system information display tool written in Swift. 
 
 - 🎨 **Colorized Output** - ANSI color-coded labels and values for easy reading
 - 🖼️ **ASCII Art** - Eye-catching Apple logo displayed alongside system info
-- 📊 **Comprehensive Data** - Collects 21+ system metrics
+- 📊 **Comprehensive Data** - Collects 30 system metrics
 - ⚡ **Native Swift** - Built with Swift for optimal macOS integration
 - 🧪 **Well Tested** - Includes unit tests and property-based tests
 
@@ -96,6 +96,7 @@ swift_fetch retrieves the following system metrics:
 ### Hardware
 - **Host Model** - Mac model identifier (e.g., Mac15,11)
 - **CPU Model** - Processor name and specifications
+- **CPU Cores** - Number of physical/logical cores
 - **GPU Model** - Graphics card information
 - **Memory** - Used and total RAM in MiB
 
@@ -116,6 +117,14 @@ swift_fetch retrieves the following system metrics:
 - **Terminal** - Terminal application name
 - **Terminal Font** - Font name and size (if detectable)
 - **Shell** - Shell name and version
+
+### System Performance & Storage
+- **Load Average** - System load (1, 5, 15 minute averages)
+- **Disk Space** - Used and free disk space in GiB
+- **Disk Encryption** - FileVault encryption status
+
+### Power
+- **Battery** - Battery charge percentage (for portable Macs)
 
 ## Testing
 
@@ -167,11 +176,13 @@ swift_fetch follows a modular architecture:
 
 The tool uses:
 - `ProcessInfo` for OS version and basic system info
-- `sysctl` for hardware details (CPU, memory, kernel)
+- `sysctl` for hardware details (CPU, memory, kernel, load averages)
 - `uname` for architecture and kernel version
-- Shell commands for uptime, packages, and display info
+- Shell commands for uptime, packages, display info, and disk space
 - Environment variables for shell and terminal detection
 - CoreGraphics API for screen resolution
+- `fdesetup` for FileVault encryption status
+- `pmset` or IOKit APIs for battery information
 
 ## License
 
