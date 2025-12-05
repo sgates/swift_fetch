@@ -129,7 +129,7 @@
     - Test handling of mismatched line counts
     - _Requirements: 3.2, 6.3_
 
-- [ ] 7. Update main entry point for expanded functionality
+- [x] 7. Update main entry point for expanded functionality
   - [x] 7.1 Verify main.swift works with expanded SystemInfo
     - Ensure all new fields are collected and displayed
     - Verify output matches expected format
@@ -140,5 +140,5 @@
     - Verify tool completes without errors
     - _Requirements: 1.1, 4.4_
 
-- [ ] 8. Checkpoint - Ensure all tests pass
+- [ ]* 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
