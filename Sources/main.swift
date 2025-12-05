@@ -528,6 +528,12 @@ enum ANSIColor: String {
     case magenta = "\u{001B}[35m"
     case cyan = "\u{001B}[36m"
     case white = "\u{001B}[37m"
+    case boldCyan = "\u{001B}[1;36m"
+    case brightGreen = "\u{001B}[92m"
+    case brightYellow = "\u{001B}[93m"
+    case brightRed = "\u{001B}[91m"
+    case brightMagenta = "\u{001B}[95m"
+    case orange = "\u{001B}[38;5;208m"
 }
 
 /// Handles ANSI color code application and text formatting
@@ -542,11 +548,11 @@ class ColorFormatter {
         return "\(color.rawValue)\(text)\(ANSIColor.reset.rawValue)"
     }
     
-    /// Formats a label with cyan color
+    /// Formats a label with bold cyan color
     /// - Parameter label: The label text to format
-    /// - Returns: The formatted label with cyan color
+    /// - Returns: The formatted label with bold cyan color
     func formatLabel(_ label: String) -> String {
-        return colorize(label, color: .cyan)
+        return colorize(label, color: .boldCyan)
     }
     
     /// Formats a value with white color
@@ -604,6 +610,41 @@ class ASCIIArtProvider {
         return lines.map { line in
             "\(color.rawValue)\(line)\(ANSIColor.reset.rawValue)"
         }
+    }
+    
+    /// Applies rainbow colors to ASCII art in horizontal stripes (classic Apple logo colors)
+    /// - Parameter lines: The array of ASCII art lines
+    /// - Returns: An array of multi-colored ASCII art lines
+    func colorizeArtRainbow(_ lines: [String]) -> [String] {
+        // Classic Apple logo colors with specific row heights:
+        // Green: 6 rows, Yellow: 2 rows, Red: 4 rows, Purple: 2 rows, Blue: 3 rows
+        let colorDistribution: [(color: ANSIColor, rows: Int)] = [
+            (.brightGreen, 6),
+            (.brightYellow, 2),
+            (.brightRed, 4),
+            (.brightMagenta, 2),
+            (.blue, 3)
+        ]
+        
+        var coloredLines: [String] = []
+        
+        for (index, line) in lines.enumerated() {
+            // Find which color stripe this line belongs to
+            var accumulatedRows = 0
+            var selectedColor = ANSIColor.brightGreen
+            
+            for (color, rows) in colorDistribution {
+                accumulatedRows += rows
+                if index < accumulatedRows {
+                    selectedColor = color
+                    break
+                }
+            }
+            
+            coloredLines.append("\(selectedColor.rawValue)\(line)\(ANSIColor.reset.rawValue)")
+        }
+        
+        return coloredLines
     }
 }
 
@@ -689,12 +730,19 @@ class DisplayRenderer {
     /// Orchestrates the complete display process
     /// - Parameter systemInfo: The system information to display
     func render(systemInfo: SystemInfo) {
-        // Get and colorize ASCII art
+        // Get and colorize ASCII art with rainbow colors
         let art = artProvider.getMacOSArt()
-        let colorizedArt = artProvider.colorizeArt(art, color: .green)
+        let colorizedArt = artProvider.colorizeArtRainbow(art)
         
         // Format system information lines organized in logical groupings
         var infoLines: [String] = []
+        
+        // Header: username@hostname with separator
+        let greenColor = ANSIColor.brightGreen.rawValue
+        let resetColor = ANSIColor.reset.rawValue
+        let userHostLine = "\(greenColor)\(systemInfo.username)\(resetColor)@\(greenColor)\(systemInfo.hostname)\(resetColor)"
+        infoLines.append(userHostLine)
+        infoLines.append(String(repeating: "-", count: 33))
         
         // OS Information
         infoLines.append(colorFormatter.formatInfoLine("OS", "\(systemInfo.osName) \(systemInfo.osVersion) \(systemInfo.osBuild) \(systemInfo.architecture)"))
@@ -703,10 +751,6 @@ class DisplayRenderer {
         infoLines.append(colorFormatter.formatInfoLine("Uptime", systemInfo.uptime))
         infoLines.append(colorFormatter.formatInfoLine("Packages", systemInfo.packages))
         infoLines.append(colorFormatter.formatInfoLine("Shell", systemInfo.shell))
-        
-        // User Information
-        infoLines.append(colorFormatter.formatInfoLine("Hostname", systemInfo.hostname))
-        infoLines.append(colorFormatter.formatInfoLine("User", systemInfo.username))
         
         // Display Configuration
         infoLines.append(colorFormatter.formatInfoLine("Resolution", systemInfo.resolution))
